@@ -1,35 +1,56 @@
-all:      lpc21isp
+# Top‐level target
+all: lpc21isp
 
-GLOBAL_DEP  = adprog.h lpc21isp.h lpcprog.h lpcterm.h
-CC = gcc
+CC := gcc
 
-ifneq ($(findstring(freebsd, $(OSTYPE))),)
-CFLAGS+=-D__FREEBSD__
-endif
-
+# Detect OSTYPE if unset
 ifeq ($(OSTYPE),)
-OSTYPE		= $(shell uname)
+  OSTYPE := $(shell uname)
 endif
 
-CFLAGS		+= -Wall
+CFLAGS := -Wall
+
+ifneq ($(findstring freebsd,$(OSTYPE)),)
+  CFLAGS += -D__FREEBSD__
+endif
 
 ifneq ($(findstring darwin,$(OSTYPE)),)
-CFLAGS+=-D__APPLE__
-else
-CFLAGS		+= -static
+  CFLAGS += -D__APPLE__
 endif
 
+GLOBAL_DEP := adprog.h lpc21isp.h lpcprog.h lpcterm.h
+
+ifdef LIBGPIOD_SUPPORT
+  PKG_CONFIG   := pkg-config
+  GPIOD_CFLAGS := $(shell $(PKG_CONFIG) --cflags libgpiod)
+  GPIOD_LIBS   := $(shell $(PKG_CONFIG) --libs   libgpiod)
+  GLOBAL_DEP   += gpio.h
+
+  CFLAGS       += $(GPIOD_CFLAGS) -DLIBGPIOD_SUPPORT
+  LDLIBS       := $(GPIOD_LIBS)
+
+  OBJS         := gpio.o
+else
+  OBJS         :=
+  LDLIBS       :=
+endif
+
+OBJS += adprog.o lpcprog.o lpcterm.o
+
 adprog.o: adprog.c $(GLOBAL_DEP)
-	$(CC) $(CDEBUG) $(CFLAGS) -c -o adprog.o adprog.c
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 lpcprog.o: lpcprog.c $(GLOBAL_DEP)
-	$(CC) $(CDEBUG) $(CFLAGS) -c -o lpcprog.o lpcprog.c
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 lpcterm.o: lpcterm.c $(GLOBAL_DEP)
-	$(CC) $(CDEBUG) $(CFLAGS) -c -o lpcterm.o lpcterm.c
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-lpc21isp: lpc21isp.c adprog.o lpcprog.o lpcterm.o $(GLOBAL_DEP)
-	$(CC) $(CDEBUG) $(CFLAGS) -o lpc21isp lpc21isp.c adprog.o lpcprog.o lpcterm.o
+gpio.o: gpio.c $(GLOBAL_DEP)
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+lpc21isp: lpc21isp.c $(OBJS) $(GLOBAL_DEP)
+	$(CC) $(CFLAGS) -o $@ lpc21isp.c $(OBJS) $(LDLIBS)
 
 clean:
-	$(RM) adprog.o lpcprog.o lpcterm.o lpc21isp
+	$(RM) adprog.o lpcprog.o lpcterm.o gpio.o lpc21isp

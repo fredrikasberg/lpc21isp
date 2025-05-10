@@ -44,3 +44,5 @@ To compile with gcc (linux, cygwin, ...)
   make -f Makefile.gnu clean all
 - Run (if you want to use gmake and gcc)
   gmake -f Makefile.gnu clean all
+
+To compile with support for libgpiod (v1.x) add `LIBGPIOD_SUPPORT=1` to your make command.
