@@ -159,16 +159,3 @@ void gpio_release(struct gpio_handle* h)
     gpiod_chip_close(h->chip);
     free(h);
 }
-
-/**
-int set_gpio(const char* chip_dev, int line_offset, int value, int active_low)
-{
-    char consumer[32];
-    snprintf(consumer, sizeof(consumer), "lpc21isp-%d", line_offset);
-    const int res = gpiod_ctxless_set_value(chip_dev, line_offset, value, active_low, consumer, NULL, NULL);
-    if (res != 0) {
-        perror("gpiod_ctxless_set_value");
-        return -1;
-    }
-    return 0;
-};*/

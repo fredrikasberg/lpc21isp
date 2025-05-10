@@ -25,8 +25,6 @@ int find_gpiochip_for_offset(const int line_offset, char **chip_dev_out);
  */
 struct gpio_handle *gpio_init_handle(const char *chip_path, unsigned int offset);
 
-/*int set_gpio(const char *chip_dev, int line_offset, int value, int active_low);*/
-
 /**
  * Set the line high (value=1) or low (value=0).
  */
